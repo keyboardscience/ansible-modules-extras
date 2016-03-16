@@ -298,8 +298,15 @@ class Rule:
 def get_consul_api(module, token=None):
     if not token:
         token = module.params.get('token')
+
+    scheme = 'https' if module.params.get('ssl') else 'http'
+
+    verify = True if module.params.get('ssl_verify') else False
+
     return consul.Consul(host=module.params.get('host'),
                          port=module.params.get('port'),
+                         scheme=scheme,
+                         verify=verify,
                          token=token)
 
 def test_dependencies(module):
@@ -319,9 +326,11 @@ def main():
         port=dict(default=8500, type='int'),
         rules=dict(default=None, required=False, type='list'),
         state=dict(default='present', choices=['present', 'absent']),
+        ssl=dict(default=False, required=False, type='bool'),
+        ssl_verify=dict(default=False, required=False, type='bool'),
         token=dict(required=False, no_log=True),
         token_type=dict(
-            required=False, choices=['client', 'management'], default='client')
+            required=False, choices=['client', 'management'], default='client', aliases=['type'])
     )
     module = AnsibleModule(argument_spec, supports_check_mode=False)
 
